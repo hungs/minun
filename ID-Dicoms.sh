@@ -16,9 +16,6 @@ do
   do
     gdcmraw -i $var -t 20,1002 -o slicenumber.log
     slices=$(cat slicenumber.log)
-    #slices="2728"
-    #use 2000 as number of slices to check the quality of DWI acquisitions
-    #if [ $slices -gt "2000" ]; then
     if [ $slices -gt "100" ]; then
       echo $i
       echo $var
