@@ -208,7 +208,7 @@ try:
     vtxs,vals,_=importVTP(input_tractname)
     print(vals['AD'].shape)
     vtxs2=vtxs
-    vals2=valscut_plane.actor.property.opacity = 0.7
+    vals2=vals
 except:
     print('vtxStats.py | Usage: <input_tractname> <input_roi> <output_filename> <use_sphere> <use_MM> [n_samples=1000] [radius=2mm]')
     print('Version May 10 2018\nextract_from_ROI modified to extract from every labeled voxels independently.')
