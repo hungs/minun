@@ -1,4 +1,22 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
+"""
+
+Usage:
+  vtxStats.py voxelwise <tract> <roi> <output> [--MM] [-s=<n> | --samples=<n>] [--debug]
+  vtxStats.py spherical <tract> <roi> <output> [--MM] [-s=<n> | --samples=<n>] [-r=<mm> | --radius=<mm>] [--debug]
+  vtxStats.py -h | --help
+  vtxStats.py --version
+
+Options:
+  -h --help          Show this screen.
+  --version          Show version.
+  -M --MM               Extract diffusivities.
+  -r --radius=<mm>      Radius for spherical extraction in mm [default: 2].
+  -s --samples=<n>      Number of samples to downsample to.
+  --debug            Show all arguments for debugging.
+
+"""
+from docopt import docopt
 import nibabel as nib
 import numpy as np
 import pandas as pd
@@ -110,7 +128,6 @@ def extract_from_ROI(ROI_file,vtxs,vals,**diff_dic):
 
     return(ROI_points,ROI_values,rest_points,rest_values)
 
-
 def extract_from_sphere(ROI_file,vtxs,vals,radius=1.5):
     global use_MM
     ROI_file = str(ROI_file)
@@ -157,6 +174,8 @@ def resample_data(vals,timep,n=1000,diffs=['AD','RD','MD','FA']):
     elif n == False:
         n = vals[diffs[0]].shape[0]
         print('Not downsampling.')
+    else:
+        print('Downsampling to: ' +str(n))
     for diff in diffs:
         if n:
             y = np.sort(vals[diff])
@@ -168,6 +187,7 @@ def resample_data(vals,timep,n=1000,diffs=['AD','RD','MD','FA']):
             values = vals[diff]
         df[diff] = values
         df['Time'] = np.array([timep for e in range(len(values))])
+
     df = df.drop('Time',1)
     return(df)
 
@@ -191,63 +211,46 @@ def MinMax_reorganization(mins,maxs):
         ZMax = mins[2]
         ZMin = maxs[2]
     return(np.array([XMin,YMin,ZMin]),np.array([XMax,YMax,ZMax]))
-'''Start main process'''
 
-#pymp.config.nested=True
-try:
-    input_tractname = str(sys.argv[1])
-    input_roi1 = str(sys.argv[2])
-    output_filename = str(sys.argv[3])
+if __name__ == '__main__':
+    args = docopt(__doc__, version='vtxStats 05.10.2018.c')
+    debug = bool(args['--debug'])
+    if debug:
+        print(args)
+    input_tractname = str(args['<tract>'])
+    input_roi1 = str(args['<roi>'])
+    output_filename = str(args['<output>'])
     output_prefix = output_filename.replace('.csv','')+'-'
-    use_sphere = int(sys.argv[4])
-    if use_sphere == 0:
+    if args['spherical'] == True:
+        use_sphere = True
+    else:
         use_sphere = False
-    use_MM = int(sys.argv[5])
-    if use_MM == 0:
-        use_MM = False
+    use_MM = args['--MM']
     vtxs,vals,_=importVTP(input_tractname)
-    print(vals['AD'].shape)
-    vtxs2=vtxs
-    vals2=vals
-except:
-    print('vtxStats.py | Usage: <input_tractname> <input_roi> <output_filename> <use_sphere> <use_MM> [n_samples=1000] [radius=2mm]')
-    print('Version May 10 2018\nextract_from_ROI modified to extract from every labeled voxels independently.')
-    #print('Version Feb 20 2018\nUse_MM option added.')
-    #print('Version Mar 15 2018\nCSV output option')
-    sys.exit(2)
-if use_MM:
-    diff_list = ['AD','RD','MD','FA','MM']
-else:
-    diff_list = ['AD','RD','MD','FA']
-try:
-    n_samples = int(sys.argv[6])
-    if n_samples == 0:
+    #print(vals['AD'].shape)
+
+    if use_MM:
+        diff_list = ['AD','RD','MD','FA','MM']
+    else:
+        diff_list = ['AD','RD','MD','FA']
+    if args['--samples']:
+        n_samples = int(args['--samples'])
+    else:
         n_samples = False
-except:
-    n_samples = 1000
-try:
-    radius = float(sys.argv[7])
-except:
-    radius = 2
-'''print(sys.argv[1])
-print(sys.argv[2])
-print(sys.argv[3])
-print(sys.argv[4])
-print(sys.argv[5])
-print(sys.argv[6])
-print(sys.argv[7])'''
+    radius = float(args['--radius'])
 
-os.system('mkdir -p stats')
-
-if use_sphere:
-    _,values,_,_=extract_from_sphere(input_roi1,vtxs,vals,radius=radius)
-    print('Spherical extraction')
-else:
-    _,values,_,_=extract_from_ROI(input_roi1,vtxs,vals)
-df = resample_data(values,timep="",n=n_samples,diffs=diff_list)
-for diff in diff_list:
-    tract_mean = np.nanmean(df[diff])
-    print("%s: %s" % (diff,df[diff].mean()))
-    if tract_mean != np.nan:
-        cur_subj = input_tractname.replace('.vtp','')
-        os.system('echo '+cur_subj+', '+str(tract_mean)+' >> stats/'+output_prefix+diff+'.csv')
+    os.system('mkdir -p stats')
+    if use_sphere:
+        _,values,_,_=extract_from_sphere(input_roi1,vtxs,vals,radius=radius)
+        print('Spherical extraction')
+    else:
+        _,values,_,_=extract_from_ROI(input_roi1,vtxs,vals)
+        print('Voxelwise extraction')
+    df = resample_data(values,timep="",n=n_samples,diffs=diff_list)
+    for diff in diff_list:
+        tract_mean = np.nanmean(df[diff])
+        print("%s: %s" % (diff,df[diff].mean()))
+        if tract_mean != np.nan:
+            cur_subj = input_tractname.replace('.vtp','')
+            os.system('echo '+cur_subj+', '+str(tract_mean)+' >> stats/'+output_prefix+diff+'.csv')
+#print(arguments['<name>'])
