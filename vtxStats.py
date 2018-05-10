@@ -8,12 +8,12 @@ Usage:
   vtxStats.py --version
 
 Options:
-  -h --help          Show this screen.
-  --version          Show version.
-  -M --MM               Extract diffusivities.
+  -h --help             Show help.
+  --version             Show version.
+  -M --MM               Extract MM values alongside diffusivities.
   -r --radius=<mm>      Radius for spherical extraction in mm [default: 2].
   -s --samples=<n>      Number of samples to downsample to.
-  --debug            Show all arguments for debugging.
+  --debug               Show all arguments for debugging.
 
 """
 from docopt import docopt
