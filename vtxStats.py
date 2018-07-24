@@ -178,7 +178,6 @@ def resample_data(vals,timep,n=1000,diffs=['AD','RD','MD','FA']):
         print('Downsampling to: ' +str(n))
     for diff in diffs:
         if n == 1:
-            print('mew')
             values = vals[diff]
         else:
             y = np.sort(vals[diff])
