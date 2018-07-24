@@ -8,12 +8,12 @@ Usage:
   vtxStats.py --version
 
 Options:
-  -h --help             Show help.
-  --version             Show version.
-  -M --MM               Extract MM values alongside diffusivities.
+  -h --help          Show this screen.
+  --version          Show version.
+  -M --MM               Extract diffusivities.
   -r --radius=<mm>      Radius for spherical extraction in mm [default: 2].
   -s --samples=<n>      Number of samples to downsample to.
-  --debug               Show all arguments for debugging.
+  --debug            Show all arguments for debugging.
 
 """
 from docopt import docopt
@@ -177,14 +177,16 @@ def resample_data(vals,timep,n=1000,diffs=['AD','RD','MD','FA']):
     else:
         print('Downsampling to: ' +str(n))
     for diff in diffs:
-        if n:
+        if n == 1:
+            print('mew')
+            values = vals[diff]
+        else:
             y = np.sort(vals[diff])
             x = np.arange(0,y.shape[0],1)
             f = interp1d(x,y)
             values = f(np.linspace(0,y.shape[0],n,endpoint=False))
             #values = resample(np.sort(vals[diff]),n)
-        else:
-            values = vals[diff]
+
         df[diff] = values
         df['Time'] = np.array([timep for e in range(len(values))])
 
@@ -213,7 +215,7 @@ def MinMax_reorganization(mins,maxs):
     return(np.array([XMin,YMin,ZMin]),np.array([XMax,YMax,ZMax]))
 
 if __name__ == '__main__':
-    args = docopt(__doc__, version='vtxStats 05.10.2018.c')
+    args = docopt(__doc__, version='vtxStats 07.24.2018')
     debug = bool(args['--debug'])
     if debug:
         print(args)
